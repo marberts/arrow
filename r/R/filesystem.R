@@ -189,6 +189,19 @@ FileSelector$create <- function(base_dir, allow_not_found = FALSE, recursive = F
 #' - `default_metadata`: default metadata to write in new objects.
 #' - `project_id`: the project to use for creating buckets.
 #'
+#' `AzureFileSystem$create()` optionally takes arguements:
+#' - `account_key`:
+#' - `blob_storage_authority`:
+#' - `blob_storage_scheme`:
+#' - `client_id`:
+#' - `client_secret`:
+#' - `dfs_storage_authority`:
+#' - `dfs_storage_scheme`:
+#' - `sas_token`:
+#' - `tenant_id`:
+#'
+#' -
+#'
 #' @section Methods:
 #'
 #' - `path(x)`: Create a `SubTreeFileSystem` from the current `FileSystem`
@@ -707,14 +720,14 @@ AzureFileSystem$create <- function(...) {
 }
 
 #' Connect to an Azure Blob Storage container
-#' 
+#'
 #' `az_conainer` is a convenience function to create an `AzureFileSystem` object
 #' that provides a file system interface for blob storage containers in an Azure
 #' Storage Account.
-#' 
+#'
 #' @param container_path string Container name or path
 #' @param ... Additional connection options, passed to `AzureFileSystem$create()`
-#' 
+#'
 #' @return A `SubTreeFileSystem` containing an `AzureFileSystem` and the container's
 #' relative path. Note that this function's success does not guarantee that you
 #' are authorized to access the container's contents.

@@ -45,7 +45,7 @@ One way of working with filesystems is to create `?FileSystem` objects.
 `?S3FileSystem` objects can be created with the `s3_bucket()` function, which
 automatically detects the bucket's AWS region. Similarly, `?GcsFileSystem` objects
 can be created with the `gs_bucket()` function and `?AzureFileSystem` objects can be created with the `az_container()` function. The resulting
-`FileSystem` will consider paths relative to the bucket/containers's path (so for example
+`FileSystem` will consider paths relative to the bucket/container's path (so for example
 you don't need to prefix the bucket path when listing a directory).
 
 With a `FileSystem` object, you can point to specific files in it with the `$path()` method

@@ -164,7 +164,7 @@ gs://anonymous@bucket/path
 For Azure, the URI format looks like this:
 
 ```
-abfs://
+abfs://container@account_name.dfs.core.windows.net/path
 ```
 
 For example, the Parquet file storing the "good cut" diamonds that we downloaded earlier in the article is available on both S3 and CGS. The relevant URIs are as follows:

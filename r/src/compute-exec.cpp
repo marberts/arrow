@@ -317,7 +317,6 @@ void ExecPlan_Write(
     arrow::dataset::ExistingDataBehavior existing_data_behavior, int max_partitions,
     uint32_t max_open_files, uint64_t max_rows_per_file, uint64_t min_rows_per_group,
     uint64_t max_rows_per_group, bool create_directory, bool preserve_order) {
->>>>>>> fcf9dd6aa50731c2b7d83e495ecbc04b002968d6
   arrow::dataset::internal::Initialize();
 
   // TODO(ARROW-16200): expose FileSystemDatasetWriteOptions in R

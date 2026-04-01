@@ -36,7 +36,6 @@ apt install -y \
   libbz2-dev \
   libc-ares-dev \
   libcurl4-openssl-dev \
-  libuv1-dev \
   libgflags-dev \
   libgoogle-glog-dev \
   liblz4-dev \

@@ -30,8 +30,6 @@ to create Arrow Tables or a stream of Arrow RecordBatches.
 .. seealso::
    :ref:`CSV reader/writer API reference <cpp-api-csv>`.
 
-.. _cpp-csv-reading:
-
 Reading CSV files
 =================
 

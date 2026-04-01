@@ -121,7 +121,6 @@ RUN apt-get update -y -q && \
         rsync \
         tzdata \
         tzdata-legacy \
-        unixodbc-dev \
         uuid-runtime \
         unzip \
         wget && \

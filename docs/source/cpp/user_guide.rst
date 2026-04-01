@@ -39,7 +39,6 @@ User Guide
    json
    dataset
    flight
-   security
    gdb
    threading
    opentelemetry

@@ -43,12 +43,12 @@ struct ColumnBinding {
 
   ColumnBinding(CDataType target_type, int precision, int scale, void* buffer,
                 size_t buffer_length, ssize_t* str_len_buffer)
-      : buffer(buffer),
-        str_len_buffer(str_len_buffer),
-        buffer_length(buffer_length),
-        target_type(target_type),
+      : target_type(target_type),
         precision(precision),
-        scale(scale) {}
+        scale(scale),
+        buffer(buffer),
+        buffer_length(buffer_length),
+        str_len_buffer(str_len_buffer) {}
 };
 
 /// \brief Accessor interface meant to provide a way of populating data of a

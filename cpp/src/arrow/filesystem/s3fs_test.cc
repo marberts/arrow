@@ -432,11 +432,9 @@ TEST_F(S3RegionResolutionTest, PublicBucket) {
 }
 
 TEST_F(S3RegionResolutionTest, RestrictedBucket) {
-  // usgs-landsat is a RequesterPays bucket from AWS Open Data Registry
-  // https://github.com/awslabs/open-data-registry/blob/main/datasets/usgs-landsat.yaml
-  ASSERT_OK_AND_EQ("us-west-2", ResolveS3BucketRegion("usgs-landsat"));
+  ASSERT_OK_AND_EQ("us-west-2", ResolveS3BucketRegion("ursa-labs-r-test"));
   // Same again, cached
-  ASSERT_OK_AND_EQ("us-west-2", ResolveS3BucketRegion("usgs-landsat"));
+  ASSERT_OK_AND_EQ("us-west-2", ResolveS3BucketRegion("ursa-labs-r-test"));
 }
 
 TEST_F(S3RegionResolutionTest, NonExistentBucket) {

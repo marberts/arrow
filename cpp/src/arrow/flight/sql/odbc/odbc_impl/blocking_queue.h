@@ -49,7 +49,7 @@ class BlockingQueue {
 
   void AddProducer(Supplier supplier) {
     active_threads_++;
-    threads_.emplace_back([this, supplier] {
+    threads_.emplace_back([=] {
       while (!closed_) {
         // Block while queue is full
         std::unique_lock<std::mutex> unique_lock(mtx_);

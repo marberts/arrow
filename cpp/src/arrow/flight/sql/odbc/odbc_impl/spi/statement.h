@@ -22,7 +22,6 @@
 #include <optional>
 #include <vector>
 
-#include "arrow/flight/sql/odbc/odbc_impl/diagnostics.h"
 #include "arrow/flight/sql/odbc/odbc_impl/type_fwd.h"
 
 namespace arrow::flight::sql::odbc {

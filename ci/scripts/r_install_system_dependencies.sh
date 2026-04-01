@@ -35,19 +35,17 @@ else
   apt-get update
 fi
 
-# Install curl, OpenSSL, and libuv
-# - curl/OpenSSL: technically only needed for S3/GCS support, but
-#   installing the R curl package fails without it
-# - libuv: required by the fs R package (no longer bundles libuv by default)
+# Install curl and OpenSSL (technically, only needed for S3/GCS support, but
+# installing the R curl package fails without it)
 case "$PACKAGE_MANAGER" in
   apt-get)
-    apt-get install -y libcurl4-openssl-dev libssl-dev libuv1-dev
+    apt-get install -y libcurl4-openssl-dev libssl-dev
     ;;
   apk)
-    $PACKAGE_MANAGER add curl-dev openssl-dev libuv-dev
+    $PACKAGE_MANAGER add curl-dev openssl-dev
     ;;
   *)
-    $PACKAGE_MANAGER install -y libcurl-devel openssl-devel libuv-devel
+    $PACKAGE_MANAGER install -y libcurl-devel openssl-devel
     ;;
 esac
 

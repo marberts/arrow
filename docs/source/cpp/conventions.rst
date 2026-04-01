@@ -20,8 +20,6 @@
 
 .. cpp:namespace:: arrow
 
-.. _cpp-conventions:
-
 Conventions
 ===========
 
@@ -44,10 +42,6 @@ Safe pointers
 
 Arrow objects are usually passed and stored using safe pointers -- most of
 the time :class:`std::shared_ptr` but sometimes also :class:`std::unique_ptr`.
-
-Non-owning alternatives exist for the rare situations where the overhead of
-a safe pointer is considered unacceptable: :class:`ArraySpan` and :class:`BufferSpan`.
-Their usage in third-party code is not recommended.
 
 Immutability
 ------------
@@ -110,3 +104,4 @@ For example::
 
 .. seealso::
    :doc:`API reference for error reporting <api/support>`
+

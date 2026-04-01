@@ -17,7 +17,6 @@
 
 #include "parquet/bloom_filter_reader.h"
 #include "parquet/bloom_filter.h"
-#include "parquet/encryption/internal_file_decryptor.h"
 #include "parquet/exception.h"
 #include "parquet/metadata.h"
 
@@ -27,14 +26,10 @@ class RowGroupBloomFilterReaderImpl final : public RowGroupBloomFilterReader {
  public:
   RowGroupBloomFilterReaderImpl(std::shared_ptr<::arrow::io::RandomAccessFile> input,
                                 std::shared_ptr<RowGroupMetaData> row_group_metadata,
-                                const ReaderProperties& properties,
-                                int32_t row_group_ordinal,
-                                std::shared_ptr<InternalFileDecryptor> file_decryptor)
+                                const ReaderProperties& properties)
       : input_(std::move(input)),
         row_group_metadata_(std::move(row_group_metadata)),
-        properties_(properties),
-        row_group_ordinal_(row_group_ordinal),
-        file_decryptor_(std::move(file_decryptor)) {}
+        properties_(properties) {}
 
   std::unique_ptr<BloomFilter> GetColumnBloomFilter(int i) override;
 
@@ -47,12 +42,6 @@ class RowGroupBloomFilterReaderImpl final : public RowGroupBloomFilterReader {
 
   /// Reader properties used to deserialize thrift object.
   const ReaderProperties& properties_;
-
-  /// The ordinal of the row group in the file.
-  int32_t row_group_ordinal_;
-
-  /// File-level decryptor.
-  std::shared_ptr<InternalFileDecryptor> file_decryptor_;
 };
 
 std::unique_ptr<BloomFilter> RowGroupBloomFilterReaderImpl::GetColumnBloomFilter(int i) {
@@ -61,6 +50,11 @@ std::unique_ptr<BloomFilter> RowGroupBloomFilterReaderImpl::GetColumnBloomFilter
   }
 
   auto col_chunk = row_group_metadata_->ColumnChunk(i);
+  std::unique_ptr<ColumnCryptoMetaData> crypto_metadata = col_chunk->crypto_metadata();
+  if (crypto_metadata != nullptr) {
+    ParquetException::NYI("BloomFilter decryption is not yet supported");
+  }
+
   auto bloom_filter_offset = col_chunk->bloom_filter_offset();
   if (!bloom_filter_offset.has_value()) {
     return nullptr;
@@ -82,32 +76,10 @@ std::unique_ptr<BloomFilter> RowGroupBloomFilterReaderImpl::GetColumnBloomFilter
           "bloom filter length + bloom filter offset greater than file size");
     }
   }
-
-  std::unique_ptr<ColumnCryptoMetaData> crypto_metadata = col_chunk->crypto_metadata();
-  std::unique_ptr<Decryptor> decryptor =
-      InternalFileDecryptor::GetColumnMetaDecryptorFactory(file_decryptor_.get(),
-                                                           crypto_metadata.get())();
-  if (decryptor != nullptr) {
-    constexpr auto kEncryptedOrdinalLimit = 32767;
-    if (ARROW_PREDICT_FALSE(row_group_ordinal_ > kEncryptedOrdinalLimit)) {
-      throw ParquetException("Encrypted files cannot contain more than 32767 row groups");
-    }
-    if (ARROW_PREDICT_FALSE(i > kEncryptedOrdinalLimit)) {
-      throw ParquetException("Encrypted files cannot contain more than 32767 columns");
-    }
-  }
-
-  const int64_t stream_length =
-      bloom_filter_length ? *bloom_filter_length : file_size - *bloom_filter_offset;
-  auto stream = ::arrow::io::RandomAccessFile::GetStream(input_, *bloom_filter_offset,
-                                                         stream_length);
+  auto stream = ::arrow::io::RandomAccessFile::GetStream(
+      input_, *bloom_filter_offset, file_size - *bloom_filter_offset);
   auto bloom_filter =
-      decryptor != nullptr
-          ? BlockSplitBloomFilter::DeserializeEncrypted(
-                properties_, stream->get(), bloom_filter_length, decryptor.get(),
-                static_cast<int16_t>(row_group_ordinal_), static_cast<int16_t>(i))
-          : BlockSplitBloomFilter::Deserialize(properties_, stream->get(),
-                                               bloom_filter_length);
+      BlockSplitBloomFilter::Deserialize(properties_, stream->get(), bloom_filter_length);
   return std::make_unique<BlockSplitBloomFilter>(std::move(bloom_filter));
 }
 
@@ -119,8 +91,11 @@ class BloomFilterReaderImpl final : public BloomFilterReader {
                         std::shared_ptr<InternalFileDecryptor> file_decryptor)
       : input_(std::move(input)),
         file_metadata_(std::move(file_metadata)),
-        properties_(properties),
-        file_decryptor_(std::move(file_decryptor)) {}
+        properties_(properties) {
+    if (file_decryptor != nullptr) {
+      ParquetException::NYI("BloomFilter decryption is not yet supported");
+    }
+  }
 
   std::shared_ptr<RowGroupBloomFilterReader> RowGroup(int i) {
     if (i < 0 || i >= file_metadata_->num_row_groups()) {
@@ -129,7 +104,7 @@ class BloomFilterReaderImpl final : public BloomFilterReader {
 
     auto row_group_metadata = file_metadata_->RowGroup(i);
     return std::make_shared<RowGroupBloomFilterReaderImpl>(
-        input_, std::move(row_group_metadata), properties_, i, file_decryptor_);
+        input_, std::move(row_group_metadata), properties_);
   }
 
  private:
@@ -141,9 +116,6 @@ class BloomFilterReaderImpl final : public BloomFilterReader {
 
   /// Reader properties used to deserialize thrift object.
   const ReaderProperties& properties_;
-
-  /// File-level decryptor, if any.
-  std::shared_ptr<InternalFileDecryptor> file_decryptor_;
 };
 
 std::unique_ptr<BloomFilterReader> BloomFilterReader::Make(

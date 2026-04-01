@@ -143,11 +143,8 @@ set PYARROW_WITH_DATASET=1
 set PYARROW_TEST_CYTHON=OFF
 set PYARROW_BUNDLE_ARROW_CPP=ON
 python -m build --sdist --wheel . --no-isolation || exit /B 1
-@rem Install the built wheel to verify it works
-for %%f in (dist\*.whl) do pip install %%f || exit /B 1
-popd
+pytest pyarrow -v -s --enable-parquet || exit /B 1
 
-set PYARROW_TEST_PARQUET=ON
-pytest --pyargs pyarrow -v -s || exit /B 1
+popd
 
 call deactivate

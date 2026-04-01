@@ -15,13 +15,9 @@
 .. specific language governing permissions and limitations
 .. under the License.
 
-.. _cpp-api-array-builders:
-
 ==============
 Array Builders
 ==============
-
-.. seealso:: :ref:`cpp-api-buffer-builders` for direct construction of array buffers
 
 .. doxygenclass:: arrow::ArrayBuilder
    :members:

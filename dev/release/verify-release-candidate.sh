@@ -538,7 +538,7 @@ test_python() {
   show_header "Build and test Python libraries"
 
   # Build and test Python
-  maybe_setup_virtualenv -r python/requirements-build.txt
+  maybe_setup_virtualenv
   maybe_setup_conda --file ci/conda_env_python.txt
 
   if [ "${USE_CONDA}" -gt 0 ]; then
@@ -570,9 +570,7 @@ test_python() {
   pushd python
 
   # Build pyarrow
-  python -m pip install --no-build-isolation .
-
-  popd
+  python -m pip install -e .
 
   # Check mandatory and optional imports
   python -c "
@@ -603,10 +601,12 @@ import pyarrow.parquet
 
 
   # Install test dependencies
-  pip install -r python/requirements-test.txt
+  pip install -r requirements-test.txt
 
   # Execute pyarrow unittests
-  pytest --pyargs pyarrow -v
+  pytest pyarrow -v
+
+  popd
 }
 
 test_glib() {

@@ -70,7 +70,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        r: ["4.4"]
+        r: ["4.6"]
         ubuntu: [24.04]
         force-tests: ["true"]
     env:
@@ -78,8 +78,9 @@ jobs:
       UBUNTU: ${{ matrix.ubuntu }}
     steps:
       - name: Checkout Arrow
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
           submodules: recursive
       - name: Free up disk space
@@ -150,8 +151,9 @@ jobs:
       R_TAG: ${{ matrix.config.tag }}
     steps:
       - name: Checkout Arrow
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
           submodules: recursive
       - name: Setup Python
@@ -207,8 +209,9 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - name: Checkout Arrow
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Setup ccache
         shell: bash
@@ -264,8 +267,9 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - name: Checkout Arrow
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
       # This must be done before r-lib/actions/setup-r because curl in
       # Rtools doesn't work on non Rtools' MSYS2 environment. If we

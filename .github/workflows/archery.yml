@@ -58,8 +58,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout Arrow
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Git Fixup
         shell: bash

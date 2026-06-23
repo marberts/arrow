@@ -20,6 +20,7 @@
 #include <utf8proc.h>
 
 #include <boost/crc.hpp>
+#include <cstdio>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -189,7 +190,10 @@ int32_t gdv_fn_populate_varlen_vector(int64_t context_ptr, int8_t* data_ptr,
   GANDIVA_EXPORT                                                                    \
   int64_t gdv_fn_crc_32_##TYPE(int64_t ctx, const char* input, int32_t input_len) { \
     if (input_len < 0) {                                                            \
-      gdv_fn_context_set_error_msg(ctx, "Input length can't be negative");          \
+      char err_msg[96];                                                             \
+      snprintf(err_msg, sizeof(err_msg),                                            \
+               "CRC32: Input length can't be negative, got %d", input_len);         \
+      gdv_fn_context_set_error_msg(ctx, err_msg);                                   \
       return 0;                                                                     \
     }                                                                               \
     boost::crc_32_type result;                                                      \
@@ -233,7 +237,10 @@ GANDIVA_EXPORT
 const char* gdv_fn_base64_encode_binary(int64_t context, const char* in, int32_t in_len,
                                         int32_t* out_len) {
   if (in_len < 0) {
-    gdv_fn_context_set_error_msg(context, "Buffer length cannot be negative");
+    char err_msg[96];
+    snprintf(err_msg, sizeof(err_msg),
+             "BASE64: input length must be non-negative, got %d", in_len);
+    gdv_fn_context_set_error_msg(context, err_msg);
     *out_len = 0;
     return "";
   }
@@ -260,7 +267,10 @@ GANDIVA_EXPORT
 const char* gdv_fn_base64_decode_utf8(int64_t context, const char* in, int32_t in_len,
                                       int32_t* out_len) {
   if (in_len < 0) {
-    gdv_fn_context_set_error_msg(context, "Buffer length cannot be negative");
+    char err_msg[96];
+    snprintf(err_msg, sizeof(err_msg),
+             "UNBASE64: input length must be non-negative, got %d", in_len);
+    gdv_fn_context_set_error_msg(context, err_msg);
     *out_len = 0;
     return "";
   }
@@ -269,7 +279,15 @@ const char* gdv_fn_base64_decode_utf8(int64_t context, const char* in, int32_t i
     return "";
   }
   // use arrow method to decode base64 string
-  std::string decoded_str = arrow::util::base64_decode(std::string_view(in, in_len));
+  auto result = arrow::util::base64_decode(std::string_view(in, in_len));
+  if (!result.ok()) {
+    gdv_fn_context_set_error_msg(context, result.status().message().c_str());
+    *out_len = 0;
+    return "";
+  }
+
+  std::string decoded_str = *result;
+
   *out_len = static_cast<int32_t>(decoded_str.length());
   // allocate memory for response
   char* ret = reinterpret_cast<char*>(
@@ -335,7 +353,10 @@ const char* gdv_fn_aes_encrypt(int64_t context, const char* data, int32_t data_l
                                const char* key_data, int32_t key_data_len,
                                int32_t* out_len) {
   if (data_len < 0) {
-    gdv_fn_context_set_error_msg(context, "Invalid data length to be encrypted");
+    char err_msg[96];
+    snprintf(err_msg, sizeof(err_msg),
+             "AES_ENCRYPT: data length can't be negative, got %d", data_len);
+    gdv_fn_context_set_error_msg(context, err_msg);
     *out_len = 0;
     return "";
   }
@@ -355,8 +376,7 @@ const char* gdv_fn_aes_encrypt(int64_t context, const char* data, int32_t data_l
       static_cast<int32_t>(arrow::bit_util::RoundUpToPowerOf2(data_len, kAesBlockSize));
   char* ret = reinterpret_cast<char*>(gdv_fn_context_arena_malloc(context, *out_len));
   if (ret == nullptr) {
-    std::string err_msg =
-        "Could not allocate memory for returning aes encrypt cypher text";
+    std::string err_msg = "AES_ENCRYPT: could not allocate memory for ciphertext output";
     gdv_fn_context_set_error_msg(context, err_msg.data());
     *out_len = 0;
     return nullptr;
@@ -379,7 +399,10 @@ const char* gdv_fn_aes_decrypt(int64_t context, const char* data, int32_t data_l
                                const char* key_data, int32_t key_data_len,
                                int32_t* out_len) {
   if (data_len < 0) {
-    gdv_fn_context_set_error_msg(context, "Invalid data length to be decrypted");
+    char err_msg[96];
+    snprintf(err_msg, sizeof(err_msg),
+             "AES_DECRYPT: data length can't be negative, got %d", data_len);
+    gdv_fn_context_set_error_msg(context, err_msg);
     *out_len = 0;
     return "";
   }
@@ -399,8 +422,7 @@ const char* gdv_fn_aes_decrypt(int64_t context, const char* data, int32_t data_l
       static_cast<int32_t>(arrow::bit_util::RoundUpToPowerOf2(data_len, kAesBlockSize));
   char* ret = reinterpret_cast<char*>(gdv_fn_context_arena_malloc(context, *out_len));
   if (ret == nullptr) {
-    std::string err_msg =
-        "Could not allocate memory for returning aes encrypt cypher text";
+    std::string err_msg = "Could not allocate memory for returning aes decrypt plaintext";
     gdv_fn_context_set_error_msg(context, err_msg.data());
     *out_len = 0;
     return nullptr;

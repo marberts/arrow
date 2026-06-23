@@ -50,17 +50,12 @@ fi
 if ! type storage-testbench >/dev/null 2>&1; then
   exclude_tests+=("arrow-gcsfs-test")
 fi
-if ! type minio >/dev/null 2>&1; then
-  exclude_tests+=("arrow-s3fs-test")
-fi
 case "$(uname)" in
   Linux)
     n_jobs=$(nproc)
     ;;
   Darwin)
     n_jobs=$(sysctl -n hw.ncpu)
-    # TODO: https://github.com/apache/arrow/issues/40410
-    exclude_tests+=("arrow-s3fs-test")
     ;;
   MINGW*)
     n_jobs=${NUMBER_OF_PROCESSORS:-1}
@@ -214,16 +209,17 @@ if [ "${ARROW_FUZZING}" == "ON" ]; then
     fi
 
     # 3. Run fuzz targets on regression files from arrow-testing
+    fuzz_target_options="-rss_limit_mb=2560"  # same as on OSS-Fuzz
     pushd "${ARROW_TEST_DATA}"
-    "${binary_output_dir}/arrow-ipc-stream-fuzz" arrow-ipc-stream/crash-*
-    "${binary_output_dir}/arrow-ipc-stream-fuzz" arrow-ipc-stream/*-testcase-*
-    "${binary_output_dir}/arrow-ipc-file-fuzz" arrow-ipc-file/*-testcase-*
-    "${binary_output_dir}/arrow-ipc-tensor-stream-fuzz" arrow-ipc-tensor-stream/*-testcase-*
+    "${binary_output_dir}/arrow-ipc-stream-fuzz" ${fuzz_target_options} arrow-ipc-stream/crash-*
+    "${binary_output_dir}/arrow-ipc-stream-fuzz" ${fuzz_target_options} arrow-ipc-stream/*-testcase-*
+    "${binary_output_dir}/arrow-ipc-file-fuzz" ${fuzz_target_options} arrow-ipc-file/*-testcase-*
+    "${binary_output_dir}/arrow-ipc-tensor-stream-fuzz" ${fuzz_target_options} arrow-ipc-tensor-stream/*-testcase-*
     if [ "${ARROW_PARQUET}" == "ON" ]; then
-      "${binary_output_dir}/parquet-arrow-fuzz" parquet/fuzzing/*-testcase-*
-      "${binary_output_dir}/parquet-encoding-fuzz" parquet/encoding-fuzzing/*-testcase-*
+      "${binary_output_dir}/parquet-arrow-fuzz" ${fuzz_target_options} parquet/fuzzing/*-testcase-*
+      "${binary_output_dir}/parquet-encoding-fuzz" ${fuzz_target_options} parquet/encoding-fuzzing/*-testcase-*
     fi
-    "${binary_output_dir}/arrow-csv-fuzz" csv/fuzzing/*-testcase-*
+    "${binary_output_dir}/arrow-csv-fuzz" ${fuzz_target_options} csv/fuzzing/*-testcase-*
     popd
 fi
 

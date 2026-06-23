@@ -50,8 +50,9 @@ jobs:
       PYTHON: "3.12"
     steps:
       - name: Checkout Arrow
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Cache Docker Volumes
         uses: actions/cache@v5

@@ -128,8 +128,7 @@ Result<std::shared_ptr<LikeHolder>> LikeHolder::Make(const FunctionNode& node) {
 }
 
 Result<std::shared_ptr<LikeHolder>> LikeHolder::Make(const std::string& sql_pattern) {
-  std::string pcre_pattern;
-  ARROW_RETURN_NOT_OK(RegexUtil::SqlLikePatternToPcre(sql_pattern, pcre_pattern));
+  ARROW_ASSIGN_OR_RAISE(auto pcre_pattern, RegexUtil::SqlLikePatternToPcre(sql_pattern));
 
   RE2::Options regex_op;
   regex_op.set_dot_nl(true);  // set dotall mode for the regex.
@@ -148,11 +147,12 @@ Result<std::shared_ptr<LikeHolder>> LikeHolder::Make(const std::string& sql_patt
                   Status::Invalid("The length of escape char ", escape_char,
                                   " in 'like' function is greater than 1"));
   std::string pcre_pattern;
+
   if (escape_char.length() == 1) {
-    ARROW_RETURN_NOT_OK(
-        RegexUtil::SqlLikePatternToPcre(sql_pattern, escape_char.at(0), pcre_pattern));
+    ARROW_ASSIGN_OR_RAISE(
+        pcre_pattern, RegexUtil::SqlLikePatternToPcre(sql_pattern, escape_char.at(0)));
   } else {
-    ARROW_RETURN_NOT_OK(RegexUtil::SqlLikePatternToPcre(sql_pattern, pcre_pattern));
+    ARROW_ASSIGN_OR_RAISE(pcre_pattern, RegexUtil::SqlLikePatternToPcre(sql_pattern));
   }
 
   auto lholder = std::shared_ptr<LikeHolder>(new LikeHolder(pcre_pattern, regex_op));
@@ -165,8 +165,7 @@ Result<std::shared_ptr<LikeHolder>> LikeHolder::Make(const std::string& sql_patt
 
 Result<std::shared_ptr<LikeHolder>> LikeHolder::Make(const std::string& sql_pattern,
                                                      RE2::Options regex_op) {
-  std::string pcre_pattern;
-  ARROW_RETURN_NOT_OK(RegexUtil::SqlLikePatternToPcre(sql_pattern, pcre_pattern));
+  ARROW_ASSIGN_OR_RAISE(auto pcre_pattern, RegexUtil::SqlLikePatternToPcre(sql_pattern));
 
   auto lholder = std::shared_ptr<LikeHolder>(new LikeHolder(pcre_pattern, regex_op));
 
@@ -238,7 +237,11 @@ const char* ExtractHolder::operator()(ExecutionContext* ctx, const char* user_in
                                       int32_t user_input_len, int32_t extract_index,
                                       int32_t* out_length) {
   if (extract_index < 0 || extract_index >= num_groups_pattern_) {
-    ctx->set_error_msg("Index to extract out of range");
+    std::string err_msg = "REGEXP_EXTRACT: invalid group_index '" +
+                          std::to_string(extract_index) + "'; must be between 0 and " +
+                          std::to_string(num_groups_pattern_ - 1) +
+                          " (the number of capture groups in the pattern)";
+    ctx->set_error_msg(err_msg.c_str());
     *out_length = 0;
     return "";
   }

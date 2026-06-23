@@ -43,7 +43,7 @@ jobs:
     name: Process
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           repository: apache/arrow
           ref: main
@@ -53,7 +53,7 @@ jobs:
         if: |
           (github.event.action == 'opened' ||
            github.event.action == 'edited')
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -64,7 +64,7 @@ jobs:
         if: |
           (github.event.action == 'opened' ||
            github.event.action == 'edited')
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -75,7 +75,7 @@ jobs:
         if: |
           (github.event.action == 'opened' ||
            github.event.action == 'edited')
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           debug: true
           github-token: ${{ secrets.GITHUB_TOKEN }}

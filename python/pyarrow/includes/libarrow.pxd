@@ -1678,6 +1678,9 @@ cdef extern from "arrow/io/api.h" namespace "arrow::io" nogil:
         CResult[shared_ptr[COutputStream]] Open(const c_string& path)
 
         @staticmethod
+        CResult[shared_ptr[COutputStream]] Open(int fd)
+
+        @staticmethod
         CResult[shared_ptr[COutputStream]] OpenWithAppend" Open"(
             const c_string& path, c_bool append)
 
@@ -1686,6 +1689,12 @@ cdef extern from "arrow/io/api.h" namespace "arrow::io" nogil:
     cdef cppclass ReadableFile(CRandomAccessFile):
         @staticmethod
         CResult[shared_ptr[ReadableFile]] Open(const c_string& path)
+
+        @staticmethod
+        CResult[shared_ptr[ReadableFile]] Open(int fd)
+
+        @staticmethod
+        CResult[shared_ptr[ReadableFile]] Open(int fd, CMemoryPool* memory_pool)
 
         @staticmethod
         CResult[shared_ptr[ReadableFile]] Open(const c_string& path,
@@ -2104,6 +2113,7 @@ cdef extern from "arrow/csv/api.h" namespace "arrow::csv" nogil:
     cdef cppclass CCSVConvertOptions" arrow::csv::ConvertOptions":
         c_bool check_utf8
         unordered_map[c_string, shared_ptr[CDataType]] column_types
+        shared_ptr[CDataType] default_column_type
         vector[c_string] null_values
         vector[c_string] true_values
         vector[c_string] false_values
@@ -2783,17 +2793,21 @@ cdef extern from "arrow/compute/api.h" namespace "arrow::compute" nogil:
 
     cdef cppclass CSortKey" arrow::compute::SortKey":
         CSortKey(CFieldRef target, CSortOrder order)
+        CSortKey(CFieldRef target, CSortOrder order, CNullPlacement null_placement)
         CFieldRef target
         CSortOrder order
+        CNullPlacement null_placement
 
     cdef cppclass COrdering" arrow::compute::Ordering":
+        COrdering(vector[CSortKey] sort_keys)
         COrdering(vector[CSortKey] sort_keys, CNullPlacement null_placement)
 
     cdef cppclass CSortOptions \
             "arrow::compute::SortOptions"(CFunctionOptions):
+        CSortOptions(vector[CSortKey] sort_keys)
         CSortOptions(vector[CSortKey] sort_keys, CNullPlacement)
         vector[CSortKey] sort_keys
-        CNullPlacement null_placement
+        optional[CNullPlacement] null_placement
 
     cdef cppclass CSelectKOptions \
             "arrow::compute::SelectKOptions"(CFunctionOptions):
@@ -2866,17 +2880,19 @@ cdef extern from "arrow/compute/api.h" namespace "arrow::compute" nogil:
 
     cdef cppclass CRankOptions \
             "arrow::compute::RankOptions"(CFunctionOptions):
+        CRankOptions(vector[CSortKey] sort_keys, CRankOptionsTiebreaker tiebreaker)
         CRankOptions(vector[CSortKey] sort_keys, CNullPlacement,
                      CRankOptionsTiebreaker tiebreaker)
         vector[CSortKey] sort_keys
-        CNullPlacement null_placement
+        optional[CNullPlacement] null_placement
         CRankOptionsTiebreaker tiebreaker
 
     cdef cppclass CRankQuantileOptions \
             "arrow::compute::RankQuantileOptions"(CFunctionOptions):
+        CRankQuantileOptions(vector[CSortKey] sort_keys)
         CRankQuantileOptions(vector[CSortKey] sort_keys, CNullPlacement)
         vector[CSortKey] sort_keys
-        CNullPlacement null_placement
+        optional[CNullPlacement] null_placement
 
     cdef enum PivotWiderUnexpectedKeyBehavior \
             "arrow::compute::PivotWiderOptions::UnexpectedKeyBehavior":
